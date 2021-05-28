@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, IconButton } from '@material-ui/core';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import './styles.css';
-import { Direction, selectTabListData } from './tab.slice';
+import { Direction, removeTab, selectTabListData } from './tab.slice';
 import { CloseOutlined } from '@material-ui/icons';
 
 export interface TabListProps {
@@ -13,6 +13,7 @@ export interface TabListProps {
 
 export default function TabList({ tabListId, tabListContainerId, split }: TabListProps) {
   const tabList = useSelector(selectTabListData(tabListId));
+  const dispatch = useDispatch();
 
   const handleClick = (tabId: string) => () => {
     split('right', tabId);
@@ -26,6 +27,7 @@ export default function TabList({ tabListId, tabListContainerId, split }: TabLis
   const handleCloseTab = (tabId: string) => (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     console.log('close tab', tabId);
+    dispatch(removeTab({ tabId, tabListId, tabListContainerId }));
   };
 
   return (

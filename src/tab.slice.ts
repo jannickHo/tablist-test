@@ -2,12 +2,14 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from './store';
 import { v4 as uuidv4 } from 'uuid';
 import _ from 'lodash';
+import { cleanupTabListContainer } from './utils';
 
 export type Direction = 'right' | 'left' | 'up' | 'down';
 export type DirectionAxis = 'horizontal' | 'vertical' | 'none';
 
 export interface TabListContainer {
   id: string;
+  parentTabListContainerId: string | undefined;
   tabListId: string | null;
   direction: DirectionAxis;
   tabListContainer: string[];
@@ -52,6 +54,7 @@ export const tabSlice = createSlice({
         ...state.tabListContainerData,
         [tabListContainerId]: {
           id: tabListContainerId,
+          parentTabListContainerId: undefined,
           tabListId,
           direction: 'none',
           tabListContainer: [],
@@ -88,6 +91,7 @@ export const tabSlice = createSlice({
       const newTabListContainer: TabListContainer = {
         tabListId,
         id: tabListContainerId,
+        parentTabListContainerId: action.payload.parentTabListContainerId,
         direction: 'none',
         tabListContainer: [],
       };
@@ -134,6 +138,7 @@ export const tabSlice = createSlice({
       const newTabListContainerNewTablist: TabListContainer = {
         tabListId,
         id: tabListContainerNewTabListId,
+        parentTabListContainerId: tabListContainerId,
         direction: 'none',
         tabListContainer: [],
       };
@@ -141,6 +146,7 @@ export const tabSlice = createSlice({
       const newTabListContainer: TabListContainer = {
         tabListId: null,
         id: tabListContainerId,
+        parentTabListContainerId: action.payload.parentTabListContainerId,
         direction: action.payload.direction === 'left' || action.payload.direction === 'right' ? 'horizontal' : 'vertical',
         tabListContainer:
           action.payload.direction === 'left' || action.payload.direction === 'up'
@@ -152,6 +158,7 @@ export const tabSlice = createSlice({
         ...state.tabListContainerData,
         [tabListContainerId]: newTabListContainer,
         [tabListContainerNewTabListId]: newTabListContainerNewTablist,
+        [action.payload.tabListContainerId]: { ...state.tabListContainerData[action.payload.tabListContainerId], parentTabListContainerId: tabListContainerId },
       };
 
       state.tabListData = { ...state.tabListData, [tabListId]: newTabList };
@@ -168,11 +175,28 @@ export const tabSlice = createSlice({
         state.tabListContainerData = { ...state.tabListContainerData, [newTabListContainerParent.id]: newTabListContainerParent };
       }
     },
-    removeTab: (state, action: PayloadAction<{ tabId: string; tabListId: string; tabListContainerId: string }>) => {},
+    removeTab: (state, action: PayloadAction<{ tabId: string; tabListId: string; tabListContainerId: string }>) => {
+      const newTabList = _.cloneDeep(state.tabListData[action.payload.tabListId]);
+      newTabList.tabs = newTabList.tabs.filter((tab) => tab !== action.payload.tabId);
+
+      if (newTabList.tabs.length !== 0) {
+        state.tabListData = { ...state.tabListData, [action.payload.tabListId]: newTabList };
+      } else {
+        const newTabListData = _.cloneDeep(state.tabListData);
+        delete newTabListData[newTabList.id];
+        state.tabListData = newTabListData;
+
+        const newData = cleanupTabListContainer(state.tabListContainerData, action.payload.tabListContainerId, state.tabListContainerList);
+        console.log(newData);
+
+        state.tabListContainerList = newData.tabListContainerList;
+        state.tabListContainerData = newData.tabListContainerData;
+      }
+    },
   },
 });
 
-export const { createTabListContainerWithTabList, splitTabListContainerToParent, splitTabListContainerToNewTabListContainer } = tabSlice.actions;
+export const { createTabListContainerWithTabList, splitTabListContainerToParent, splitTabListContainerToNewTabListContainer, removeTab } = tabSlice.actions;
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectTabListContainerList = (state: RootState) => state.tab.tabListContainerList;
