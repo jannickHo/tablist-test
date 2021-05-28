@@ -1,12 +1,9 @@
-import { Paper } from "@material-ui/core";
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import TabListContainer from "./TabListContainer";
-import "./styles.css";
-import {
-  createTabListContainerWithTabList,
-  selectTabListContainerList
-} from "./tab.slice";
+import { Paper } from '@material-ui/core';
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import TabListContainer from './TabListContainer';
+import './styles.css';
+import { createTabListContainerWithTabList, selectTabListContainerList } from './tab.slice';
 
 export default function App() {
   const dispatch = useDispatch();
@@ -21,10 +18,10 @@ export default function App() {
   return (
     <Paper
       style={{
-        height: "800px",
-        width: "800px",
-        backgroundColor: "gray",
-        display: "flex"
+        height: '800px',
+        width: '800px',
+        backgroundColor: 'gray',
+        display: 'flex',
       }}
     >
       {tabListContainerList.map((tlc, index, array) => (
@@ -34,7 +31,8 @@ export default function App() {
           width={100 / array.length}
           height={100}
           index={index}
-          parentTabListDirection="horizontal"
+          parentTabListDirection='horizontal'
+          parentChildrenLength={array.length}
         />
       ))}
     </Paper>
